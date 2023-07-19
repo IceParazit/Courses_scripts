@@ -52,6 +52,11 @@ if ! [[ $password_length =~ $re ]] || [ $password_length -lt 1 ]; then
     exit 1
 fi
 
+if ! [[ $num_passwords =~ $re ]] || [ $num_passwords -lt 1 ]; then
+    echo "Ошибка: Введите положительное целое число для количества паролей." >&2
+    exit 1
+fi
+
 # Генерировать пароль и вывести его на экран
 for ((i = 0; i < $num_passwords; i++))
 do
