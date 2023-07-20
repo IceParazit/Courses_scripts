@@ -1,39 +1,33 @@
 #!/bin/bash
 
 #Переменные
-proc_name=2
-proc_mem=2
-proc_state=2
-limit=40
+proc_name=false
+proc_mem=false
+proc_state=false
+limit=50
 help="Этот скрипт генерирует пароли
 Данный скрипт использует следующие аргумнты
--l Данным аргументом можно задать требуемую длину пароля
--n Данным аргументом можно задать требуемое количество генерируемых паролей
+-s Данным аргументом выводить строку Состояние процесса
+-n Данным аргументом выводить строку Имя процецесса 
+-m Данным аргументом выводить строку Физическая память
 -h помощь
-По умолчанию данный скрипт имеет следующие параметры 
-Длина -eq 10
-Количество -eq 5
 Автор данного скрипта - IceParazit"
 
 # Разбор аргументов командной строки
 while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-        -l) 
-            limit=$1
-            shift 2
-            ;;
         -n|--name)
             shift
-            proc_name="1"
+            proc_name=true
             ;;
         -m|--memory)
             shift
-            proc_mem="1"
+            proc_mem=true
             ;;
         -s|--state)
             shift
-            proc_state="1"
+            proc_state=true
             ;;
         -h)
             echo "$help"
@@ -44,7 +38,6 @@ while [[ $# -gt 0 ]]; do
             exit 1
             ;;
     esac
-    shift
 done
 
 
@@ -61,21 +54,23 @@ while true; do
     clear  # Очищаем экран перед каждым обновлением информации
 
     # Выводим заголовки столбцов
-    if [[ $proc_name -eq 1 && $proc_mem -ne 1 && $proc_state -ne 1 ]]; then
-            printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" 
-        elif [[ $proc_name -ne 1 && $proc_mem -eq 1 && $proc_state -ne 1 ]]; then
-            printf "%-10s %-40s %-20s %-10s\n" "PID"  "Физическая память" 
-        elif [[ $proc_name -ne 1 && $proc_mem -ne 1 && $proc_state -eq 1 ]]; then
-            printf "%-10s %-40s %-20s %-10s\n" "PID"  "Состояние"
-        elif [[ $proc_name -ne 1 && $proc_mem -eq 1 && $proc_state -eq 1 ]]; then
-            printf "%-10s %-40s %-20s %-10s\n" "PID" "Физическая память" "Состояние"
-        elif [[ $proc_name -eq 1 && $proc_mem -ne 1 && $proc_state -eq 1 ]]; then
+
+            
+    if [[ "$proc_name" = true && "$proc_mem" = false && "$proc_state" = false ]]; then
+        printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" 
+        elif [[ "$proc_mem" = true && "$proc_name" = false && "$proc_state" = false ]]; then
+            printf "%-10s %-40s %-20s %-10s\n" "PID" "Физическая память"
+        elif [[ "$proc_state" = true && "$proc_name" = false && "$proc_mem" = false ]]; then
+            printf "%-10s %-40s %-20s %-10s\n" "PID" "Состояние"
+        elif [[ "$proc_name" = true && "$proc_state" = true && "$proc_mem" = false ]]; then
             printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" "Состояние"
-        elif [[ $proc_name -eq 1 && $prmem -eq 1 && $proc_state -ne 1 ]]; then
+        elif [[ "$proc_name" = true && "$proc_mem" = true && "$proc_state" = false ]]; then
             printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" "Физическая память"
-        elif [[ $proc_name -eq 1 && $proc_mem -eq 1 && $proc_state -eq 1 ]] ; then
+        elif [[ "$proc_mem" = true && "$proc_state" = true && "$proc_name" = false ]] ; then
+            printf "%-10s %-40s %-20s %-10s\n" "PID" "Физическая память" "Состояние"
+        elif [[ "$proc_name" = true && "$proc_mem" = true && "$proc_state" = true  ]]; then
             printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" "Физическая память" "Состояние"
-        elif [[ $proc_name -eq 1 && $proc_mem -eq 1 && $proc_state -eq 1  || $proc_name -eq 2 && $proc_mem -eq 2 && $proc_state -eq 2 ]]; then
+        elif [[ "$proc_name" = false && "$proc_mem" = false && "$proc_state" = false ]]; then
             printf "%-10s %-40s %-20s %-10s\n" "PID" "Имя процесса" "Физическая память" "Состояние"
     fi
 
@@ -96,21 +91,27 @@ while true; do
             memory_kb=$((memory * 4))  # Преобразуем страницы в килобайты
             state=$(cat "$pid_dir/status" | awk '/^State:/ {print $2}')
             
-            if [[ $proc_name -eq 1 && $proc_mem -ne 1 && $proc_state -ne 1 ]]; then
-                printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" 
-                elif [[ $proc_name -ne 1 && $proc_mem -eq 1 && $proc_state -ne 1 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "${memory_kb} KB"
-                elif [[ $proc_name -ne 1 && $proc_mem -ne 1 && $proc_state -eq 1 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "$state"
-                elif [[ $proc_name -ne 1 && $proc_mem -eq 1 && $proc_state -eq 1 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "${memory_kb} KB" "$state"
-                elif [[ $proc_name -eq 1 && $proc_mem -ne 1 && $proc_state -eq 1 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" "$state"
-                elif [[ $proc_name -eq 1 && $proc_mem -eq 1 && $proc_state -ne 1 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" "${memory_kb} KB"
-                elif [[ $proc_name -eq 1 && $proc_mem -eq 1 && $proc_state -eq 1  || $proc_name -eq 2 && $proc_mem -eq 2 && $proc_state -eq 2 ]]; then
-                    printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" "${memory_kb} KB" "$state"
-            fi
+    
+
+
+
+        if [[ "$proc_name" = true && "$proc_mem" = false && "$proc_state" = false ]]; then
+            printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" 
+            elif [[ "$proc_mem" = true && "$proc_name" = false && "$proc_state" = false ]]; then
+                printf "%-10s %-40s %-20s %-10s\n" "$pid" "${memory_kb} KB"
+            elif [[ "$proc_state" = true && "$proc_name" = false && "$proc_mem" = false ]]; then
+                printf "%-10s %-40s %-20s %-10s\n" "$pid" "$state"
+            elif [[ "$proc_name" = true && "$proc_state" = true && "$proc_mem" = false ]]; then
+                printf "%-10s %-40s %-20s %-10s\n" "$pid" "$name" "$state"
+            elif [[ "$proc_name" = true && "$proc_mem" = true && "$proc_state" = false ]]; then
+                printf "%-10s %-30s %-20s %-10s\n" "$pid" "$name" "${memory_kb} KB"
+            elif [[ "$proc_mem" = true && "$proc_state" = true && "$proc_name" = false ]] ; then
+                printf "%-10s %-30s %-10s %-10s\n" "$pid" "${memory_kb} KB" "$state"
+            elif [[ "$proc_name" = true && "$proc_mem" = true && "$proc_state" = true  ]]; then
+                printf "%-10s %-35s %-15s %-10s\n" "$pid" "$name" "${memory_kb} KB" "$state"
+            elif [[ "$proc_name" = false && "$proc_mem" = false && "$proc_state" = false ]]; then
+                printf "%-10s %-35s %-15s %-10s\n" "$pid" "$name" "${memory_kb} KB" "$state"
+        fi
             ((count++))
         fi
     done
